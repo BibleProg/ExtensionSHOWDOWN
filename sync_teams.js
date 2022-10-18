@@ -80,7 +80,17 @@ function Get(){
    var url = "https://api.github.com/gists/" + id;
    var res = Requete(url);
    var gist = JSON.parse(res.text);
-   console.debug(gist[0].files);
+   // var file = JSON.parse(gist[0].files);
+   // console.debug(gist[1]);
+   var raw_url = gist[0].files.teams.raw_url;
+   var regex = /raw\/[a-z0-9]+/g;
+   version = gist[0].files.teams.raw_url.match(regex)[0].replace('raw/','');
+   console.debug();
+   var content = new XMLHttpRequest();
+   content.open("GET",raw_url,false);
+   content.send(null);
+   console.debug(content.responseText);
+
 
    return gist[0].files.content;
 }
@@ -89,7 +99,7 @@ console.debug(Exist());
 // var ok = Exist();
 if (Exist()){
    rTeams = Get();
-   console.log(rTeams);
+   // console.log(rTeams);
 
 }
 // lTeams = localStorage.getItem('showdown_teams');
