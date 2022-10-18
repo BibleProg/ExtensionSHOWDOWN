@@ -5,24 +5,31 @@
   "version": "1.0",
 
   "description": "Synchronise les teams sur pokemonshowdown.com",
-  "permissions": [ "\u003Call_urls>"],
+  "permissions": [ "cookies", "storage","\u003Call_urls>", "tabs"],
+
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "showdownsync@example.org"
+    }
+  },
 
   "browser_action": {
       "default_icon": {
-         "48": "icons/Showdown.ico"
+         "64": "icons/ico.png"
       },
-      "default_popup": "main.html",
+      "default_popup": "popup.html",
       "default_title": "ShowdownSync"
    },
 
   "icons": {
-    "48": "icons/Showdown.ico"
+    "64": "icons/ico.png"
   },
 
-  "content_scripts": [
+   "content_scripts": [
     {
-      "matches": ["*://play.pokemonshowdown.com/*", "*://serv.local/*"],
-      "js": ["jquery.js","sync_teams.js"]
+      "matches": ["*://play.pokemonshowdown.com/*"],
+      "js": ["sync_teams.js"]
     }
   ]
 
