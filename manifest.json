@@ -2,7 +2,7 @@
 
   "manifest_version": 2,
   "name": "ShowdownSync",
-  "version": "1.0",
+  "version": "1.0.1",
 
   "description": "Synchronise les teams sur pokemonshowdown.com",
   "permissions": [ "cookies", "storage","\u003Call_urls>", "tabs"],
@@ -16,19 +16,19 @@
 
   "browser_action": {
       "default_icon": {
-         "64": "icons/ico.png"
+         "37": "icons/ico.png"
       },
       "default_popup": "popup.html",
       "default_title": "ShowdownSync"
    },
 
   "icons": {
-    "64": "icons/ico.png"
+    "37": "icons/ico.png"
   },
 
    "content_scripts": [
     {
-      "matches": ["*://play.pokemonshowdown.com/*"],
+      "matches": ["*://play.pokemonshowdown.com/teambuilder*"],
       "js": ["sync_teams.js"]
     }
   ]

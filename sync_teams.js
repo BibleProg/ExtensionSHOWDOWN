@@ -1,24 +1,11 @@
-// import * from "https://cdn.skypack.dev/@octokit/rest";
-// curl 
-//     -X POST 
-//     -H "Accept: application/vnd.github+json" 
-//     -H "Authorization: Bearer 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" 
-//     https://api.github.com/gists 
-//     -data "{\"description\":\"Example of a gist\",\"public\":false,\"files\":{\"README.md\":{\"content\":\"Hello World\"}}}"
-
-// create POST
-// token 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
-// var data = '{"description":"Example of a gist","public":false,"files":{"README.md":{"content":"Hello World"}}}';
+// https://developer.github.com/v3/gists/
 
 console.log("Load ShowdownSync extension!");
 
 function init(){
 
     console.log("Init start!");
-
-    // token    = "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";
-    // username = "BibleProg";
-        
+      
     debug    = true;
     gistName = "ShowdownSync";
     error    = {"count" : 0, "lasterror" : ""};
@@ -26,14 +13,16 @@ function init(){
     version  = Get_version();
     rTeams   = Get_rteams();
     lTeams   = Get_lteams();
+    autoSync = true;
+    // if (autoSync) {window.addEventListener("click", Save);}
 
     console.debug({
         "token" : token,
-        "username" : username,
         "debug" : debug,
         "gistName" : gistName,
         "error" : error,
         "id" : id,
+        "autoSync" : autoSync,
         "version" : version,
         "rTeams" : rTeams,
         "lTeams" : lTeams
@@ -52,13 +41,12 @@ function Requete(url, method="GET", data=false){
    xhr.setRequestHeader("Accept", "application/vnd.github+json");
    xhr.setRequestHeader("Authorization", "Bearer " + token);
 
-   // xhr.onreadystatechange = function () {
-   //  if (xhr.readyState === 4 && debug) {
-   //     console.log(xhr.status);
-   //     console.log(xhr.responseText);
-   // }};
-
    xhr.send(data);
+
+   if (xhr.status == 401){
+    throw {"name" : "BadIdentification", "message" : "Mauvaises informations d\'authentification"};
+   }
+   console.debug(xhr);
 
    return {
     'status': xhr.status,
@@ -80,7 +68,8 @@ function Create(){
 
 function Get_id(){
 
-   var url = "https://api.github.com/users/" + username + "/gists";
+   // var url = "https://api.github.com/users/" + username + "/gists";
+   var url = "https://api.github.com/gists"
 
    var res = Requete(url); 
    var gists = JSON.parse(res.text);
@@ -105,7 +94,7 @@ function Get_version(){
     var url = "https://api.github.com/gists/" + id;
     var res = Requete(url);
     var gist = JSON.parse(res.text);
-
+    // console.debug(gist);
     var raw_url = gist.files.teams.raw_url;
     var regex = /raw\/[a-z0-9]+/g;
    
@@ -116,12 +105,13 @@ function Get_rteams(){
    var url = "https://api.github.com/gists/" + id;
    var res = Requete(url);
    var gist = JSON.parse(res.text);
+   // console.debug(gist);
 
    var raw_url = gist.files.teams.raw_url;
 
    var raw = Requete(raw_url);
 
-   return raw.text;
+   return raw.text.replaceAll("~","\n");
 }
 
 
@@ -139,10 +129,12 @@ function Restore(){
 }
 
 function Save(){
-    var ok = confirm("Ecraser la sauvegarde ?")
+    
+    var ok = confirm("Ecraser la sauvegarde ?");
     if (ok){
         var url = "https://api.github.com/gists/" + id;
-        var data = '{"description":"ShowdownSync","files":{"teams":{"content":"'+ lTeams +'"}}}';
+        var data = '{"description":"ShowdownSync","files":{"teams":{"content":"'+ lTeams.replaceAll("\n","~") +'"}}}';
+        console.debug(data);
         Requete(url, "PATCH", data);
     }
 
@@ -158,41 +150,37 @@ function Sync(){
     }
 }
 
-   
-
 browser.runtime.onMessage.addListener( (sentMesssage, sender) => 
 { 
-    try{
-        browser.storage.local.get().then((key) =>{
+    browser.storage.local.get().then((key) =>{
+        try{
+            token    = key.token;
+        
+            init();
+            console.debug(sentMesssage.text);
 
-        token    = key.token;
-        username = key.username;
-    
-        init();
-        console.log("ne pas apparaitre avant get");
-        console.debug(sentMesssage.text);
+            switch (sentMesssage.text){
+                case 'charger':
+                    Sync();
+                    window.location.reload();
+                    break;
+                case 'restaurer':
+                    Restore();
+                    window.location.reload();
+                    break;
+                case 'sauvegarder':
+                    Save();
+                    break;
+                case 'test':
+                    console.log('test boutton ok');
+                    break;
+                default:
+                    console.log(sentMesssage.text)
 
-        switch (sentMesssage.text){
-            case 'charger':
-                Sync();
-                window.location.reload();
-                break;
-            case 'restaurer':
-                Restore();
-                window.location.reload();
-                break;
-            case 'sauvegarder':
-                Save();
-                break;
-            case 'test':
-                console.log('test boutton ok');
-                break;
-            default:
-                console.log(sentMesssage.text)
-
+            }
+        }catch(e){
+            if (e.name == "BadIdentification") {alert("Mauvais token Github");}
+            console.log(e.name + " : " + e.message);
         }
     });
-    }catch(e){
-         console.log(e.name + " : " + e.message);
-    }
 });
